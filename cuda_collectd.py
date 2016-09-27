@@ -14,7 +14,9 @@ def read(data=None):
         out = subprocess.Popen(['nvidia-smi', '-q', '-x'], stdout=subprocess.PIPE).communicate()[0]
         root = ET.fromstring(out)
  
-        for gpu in root.iter('gpu'):
+	# Changed root.iter() to root.getiterator() for Python 2.6 compatibility
+
+        for gpu in root.getiterator('gpu'):
                 # GPU id
                 vl.plugin_instance = 'gpu-%s' % (gpu.find('minor_number').text)
  
