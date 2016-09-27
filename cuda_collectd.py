@@ -6,9 +6,15 @@ def read(data=None):
         vl = collectd.Values(type='gauge')
         vl.plugin = 'cuda'
 
-	signal.signal(SIGCHLD, signal.SIG_DFL)
-        out = subprocess.Popen(['nvidia-smi', '-q', '-x', '-d', 'MEMORY,UTILIZATION,POWER' ], stdout=subprocess.PIPE).communicate()[0]
-        root = ET.fromstring(out)
+# 	Modified to use latest nvidia-smi that comes with Cuda 7.5
+# 	Don't need to use the signal library
+#	signal.signal(SIGCHLD, signal.SIG_DFL)
+
+#       Deprecated use of -d, does not work with -x anymore.
+#       out = subprocess.Popen(['nvidia-smi', '-q', '-x', '-d', 'MEMORY,UTILIZATION,POWER' ], stdout=subprocess.PIPE).communicate()[0]
+        
+	out = subprocess.Popen(['nvidia-smi', '-q', '-x'], stdout=subprocess.PIPE).communicate()[0]
+	root = ET.fromstring(out)
 
         for gpu in root.getiterator('gpu'):
                 vl.plugin_instance = 'cuda-%s' % (gpu.attrib['id'])
@@ -19,11 +25,13 @@ def read(data=None):
 #                vl.dispatch(type='temperature',
 #                            values=[float(gpu.find('temperature/gpu_temp').text.split()[0])])
 
+#		Modified deprecated varible names, added fb_ in front of memory
+#		variables
                 vl.dispatch(type='memory', type_instance='used',
-                            values=[1e6 * float(gpu.find('memory_usage/used').text.split()[0])])
+                            values=[1e6 * float(gpu.find('fb_memory_usage/used').text.split()[0])])
 
                 vl.dispatch(type='memory', type_instance='total',
-                            values=[1e6 * float(gpu.find('memory_usage/total').text.split()[0])])
+                            values=[1e6 * float(gpu.find('fb_memory_usage/total').text.split()[0])])
 
                 vl.dispatch(type='percent', type_instance='gpu_util',
                             values=[float(gpu.find('utilization/gpu_util').text.split()[0])])
