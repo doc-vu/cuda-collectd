@@ -1,5 +1,5 @@
 #!/usr/bin/env python
- 
+
 import collectd
 import subprocess
 import xml.etree.ElementTree as ET
@@ -12,16 +12,16 @@ def configure(conf):
 def read(data=None):
         vl = collectd.Values(type='gauge')
         vl.plugin = 'cuda'
- 
+
         out = subprocess.Popen(['nvidia-smi', '-q', '-x'], stdout=subprocess.PIPE).communicate()[0]
         root = ET.fromstring(out)
- 
+
         # Changed root.iter() to root.getiterator() for Python 2.6 compatibility
 
         for gpu in root.getiterator('gpu'):
                 # GPU id
                 vl.plugin_instance = 'gpu-%s' % (gpu.find('minor_number').text)
- 
+
                 # GPU utilization
                 vl.dispatch(type='percent', type_instance='gpu_util',
                             values=[float(gpu.find('utilization/gpu_util').text.split()[0])])
@@ -52,6 +52,6 @@ def read(data=None):
                 # GPU memory frequency
                 vl.dispatch(type='cpufreq', type_instance='mem_clock',
                             values=[1e6 * float(gpu.find('clocks/mem_clock').text.split()[0])])
- 
+
 collectd.register_config(configure)
 collectd.register_read(read)
