@@ -3,7 +3,7 @@ from setuptools import setup
 
 
 setup(name='collectd-cuda',
-      version='0.0.2',
+      version='0.0.3',
       description='CollectD plugin for Nvidia CUDA statistics',
       author='Jon Skarpeteig',
       author_email='jon.skarpeteig@gmail.com',
