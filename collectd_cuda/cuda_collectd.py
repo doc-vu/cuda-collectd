@@ -3,7 +3,17 @@
 import collectd
 import subprocess
 import xml.etree.ElementTree as ET
+import signal
+import sys
 
+def restore_sigchld():
+        """
+        Restore SIGCHLD handler for python <= v2.6
+        It will BREAK exec plugin!!!
+        See https://github.com/deniszh/collectd-iostat-python/issues/2 for details
+        """
+        if sys.version_info[0] == 2 and sys.version_info[1] <= 6:
+                signal.signal(signal.SIGCHLD, signal.SIG_DFL)
 
 def configure(conf):
         collectd.info('Configured with')
@@ -53,5 +63,6 @@ def read(data=None):
                 vl.dispatch(type='cpufreq', type_instance='mem_clock',
                             values=[1e6 * float(gpu.find('clocks/mem_clock').text.split()[0])])
 
+collectd.register_init(restore_sigchld)
 collectd.register_config(configure)
 collectd.register_read(read)
